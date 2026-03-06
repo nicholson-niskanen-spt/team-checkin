@@ -386,19 +386,23 @@
 
 <div class="toast" id="toast"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script>
+  // EmailJS config — update if management changes
+  const EMAILJS_SERVICE_ID  = 'service_p5izes8';
+  const EMAILJS_TEMPLATE_ID = 'template_vksl56q';
+  const EMAILJS_PUBLIC_KEY  = 'TxZUrmh_gg29dLnyF';
+
+  emailjs.init(EMAILJS_PUBLIC_KEY);
+
   const state = { workload: null, wellbeing: null };
 
-  // Load saved name
+  // Load saved name — persists across visits
   const savedName = localStorage.getItem('checkin_name');
   if (savedName) document.getElementById('nameInput').value = savedName;
   document.getElementById('nameInput').addEventListener('blur', () => {
     localStorage.setItem('checkin_name', document.getElementById('nameInput').value.trim());
   });
-
-  // RECIPIENT EMAIL — update this if management changes
-  const RECIPIENT_EMAIL = 'anicholson@niskanencenter.org';
-
 
   document.querySelectorAll('.status-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -425,12 +429,10 @@
   async function submitStatus() {
     const name = document.getElementById('nameInput').value.trim();
     const note = document.getElementById('noteInput').value.trim();
-    const recipient = RECIPIENT_EMAIL;
 
     if (!name) { showToast('Please enter your name', true); return; }
     if (!state.workload) { showToast('Please select a Workload status', true); return; }
     if (!state.wellbeing) { showToast('Please select a Wellbeing status', true); return; }
-    if (!recipient) { showToast('No recipient configured', true); return; }
 
     const btn = document.getElementById('submitBtn');
     btn.disabled = true;
@@ -438,31 +440,28 @@
 
     const now = new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
 
-    const subject = `Team Check-In: ${name} — ${now}`;
-    const body = `Team Check-In from ${name}
-Submitted: ${now}
+    const templateParams = {
+      name:      name,
+      submitted: now,
+      workload:  `${colorEmoji(state.workload)} ${getLabel('workload', state.workload)}`,
+      wellbeing: `${colorEmoji(state.wellbeing)} ${getLabel('wellbeing', state.wellbeing)}`,
+      note:      note || 'None',
+    };
 
-📊 Workload: ${colorEmoji(state.workload)} ${getLabel('workload', state.workload)}
-🌿 Wellbeing: ${colorEmoji(state.wellbeing)} ${getLabel('wellbeing', state.wellbeing)}
-${note ? `\n💬 Note: ${note}` : ''}
-
----
-Sent via Team Check-In app`;
-
-    // Use mailto to open email client — for production, replace with a backend/EmailJS call
-    const mailtoLink = `mailto:${encodeURIComponent(recipient)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    window.location.href = mailtoLink;
-
-    setTimeout(() => {
-      btn.disabled = false;
-      btn.textContent = 'Send Check-In';
+    try {
+      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams);
       showToast('Check-in sent! ✓');
-      // Reset selections
       document.querySelectorAll('.status-btn').forEach(b => b.classList.remove('selected'));
       state.workload = null;
       state.wellbeing = null;
       document.getElementById('noteInput').value = '';
-    }, 1200);
+    } catch (err) {
+      console.error('EmailJS error:', err);
+      showToast('Failed to send — please try again', true);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Send Check-In';
+    }
   }
 
   function showToast(msg, isError = false) {
