@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Team Check-In</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f5f2ee;
+    --surface: #ffffff;
+    --text: #1a1714;
+    --muted: #8a8480;
+    --border: #e0dbd4;
+    --green: #2d7a4f;
+    --green-light: #e8f5ee;
+    --green-mid: #c3e8d0;
+    --yellow: #b07d1a;
+    --yellow-light: #fdf6e3;
+    --yellow-mid: #f5e0a0;
+    --red: #b03030;
+    --red-light: #fdeaea;
+    --red-mid: #f0b8b8;
+    --radius: 14px;
+    --shadow: 0 2px 16px rgba(0,0,0,0.07);
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .card {
+    background: var(--surface);
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    padding: 40px 36px;
+    width: 100%;
+    max-width: 480px;
+  }
+
+  .header {
+    margin-bottom: 32px;
+    text-align: center;
+  }
+
+  .header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem;
+    letter-spacing: -0.5px;
+    color: var(--text);
+    line-height: 1.1;
+  }
+
+  .header p {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-top: 6px;
+    font-weight: 300;
+  }
+
+  .name-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    margin-bottom: 28px;
+    border: 1.5px solid var(--border);
+    transition: border-color 0.2s;
+  }
+
+  .name-row:focus-within {
+    border-color: #aaa9a5;
+  }
+
+  .name-row label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .name-row input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    color: var(--text);
+    outline: none;
+  }
+
+  .name-row input::placeholder { color: #c0bbb5; }
+
+  .section {
+    margin-bottom: 24px;
+  }
+
+  .section-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--muted);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-label span { font-size: 1rem; }
+
+  .status-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .status-btn {
+    position: relative;
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 8px;
+    cursor: pointer;
+    background: var(--surface);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.18s ease;
+    font-family: 'DM Sans', sans-serif;
+    user-select: none;
+  }
+
+  .status-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+
+  .status-btn .dot {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .status-btn .label {
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.2;
+  }
+
+  .status-btn .sublabel {
+    font-size: 0.68rem;
+    color: #b0aba5;
+    text-align: center;
+    line-height: 1.2;
+  }
+
+  /* Green */
+  .status-btn.green .dot { background: #4caf82; }
+  .status-btn.green.selected {
+    border-color: var(--green);
+    background: var(--green-light);
+  }
+  .status-btn.green.selected .label { color: var(--green); font-weight: 600; }
+
+  /* Yellow */
+  .status-btn.yellow .dot { background: #e0b030; }
+  .status-btn.yellow.selected {
+    border-color: var(--yellow);
+    background: var(--yellow-light);
+  }
+  .status-btn.yellow.selected .label { color: var(--yellow); font-weight: 600; }
+
+  /* Red */
+  .status-btn.red .dot { background: #e05050; }
+  .status-btn.red.selected {
+    border-color: var(--red);
+    background: var(--red-light);
+  }
+  .status-btn.red.selected .label { color: var(--red); font-weight: 600; }
+
+  .note-area {
+    margin-top: 8px;
+  }
+
+  .note-area textarea {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem;
+    color: var(--text);
+    background: var(--bg);
+    resize: none;
+    outline: none;
+    transition: border-color 0.2s;
+    line-height: 1.5;
+  }
+
+  .note-area textarea:focus { border-color: #aaa9a5; }
+  .note-area textarea::placeholder { color: #c0bbb5; }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 8px 0 24px;
+  }
+
+  .submit-btn {
+    width: 100%;
+    padding: 15px;
+    background: var(--text);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    transition: all 0.18s ease;
+    margin-top: 8px;
+  }
+
+  .submit-btn:hover:not(:disabled) {
+    background: #333;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+  }
+
+  .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--text);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    font-weight: 500;
+    transition: transform 0.3s ease;
+    z-index: 999;
+    white-space: nowrap;
+  }
+
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.error { background: var(--red); }
+
+  .email-setup {
+    margin-top: 20px;
+    padding: 14px 16px;
+    background: #fffbf0;
+    border: 1.5px dashed #ddd0a0;
+    border-radius: var(--radius);
+    font-size: 0.82rem;
+    color: #7a6a30;
+    line-height: 1.5;
+  }
+
+  .email-setup strong { display: block; margin-bottom: 4px; font-weight: 600; }
+
+  .email-setup input {
+    margin-top: 8px;
+    width: 100%;
+    border: 1px solid #ddd0a0;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    background: white;
+    outline: none;
+    color: var(--text);
+  }
+
+  .config-save {
+    margin-top: 8px;
+    padding: 7px 14px;
+    background: #7a6a30;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .configured-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.78rem;
+    color: var(--green);
+    font-weight: 600;
+    margin-top: 6px;
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="header">
+    <h1>Team Check-In</h1>
+    <p>How are you doing today?</p>
+  </div>
+
+  <!-- Name -->
+  <div class="name-row">
+    <label>Name</label>
+    <input type="text" id="nameInput" placeholder="Your name…" autocomplete="off" />
+  </div>
+
+  <!-- Workload -->
+  <div class="section">
+    <div class="section-label"><span>📊</span> Workload</div>
+    <div class="status-grid" id="workloadGrid">
+      <button class="status-btn green" data-section="workload" data-value="green">
+        <div class="dot"></div>
+        <div class="label">All Good</div>
+        <div class="sublabel">Manageable</div>
+      </button>
+      <button class="status-btn yellow" data-section="workload" data-value="yellow">
+        <div class="dot"></div>
+        <div class="label">Getting Busy</div>
+        <div class="sublabel">Check in soon</div>
+      </button>
+      <button class="status-btn red" data-section="workload" data-value="red">
+        <div class="dot"></div>
+        <div class="label">Overloaded</div>
+        <div class="sublabel">Contact me</div>
+      </button>
+    </div>
+  </div>
+
+  <!-- Wellbeing -->
+  <div class="section">
+    <div class="section-label"><span>🌿</span> Wellbeing</div>
+    <div class="status-grid" id="wellbeingGrid">
+      <button class="status-btn green" data-section="wellbeing" data-value="green">
+        <div class="dot"></div>
+        <div class="label">Doing Well</div>
+        <div class="sublabel">All good</div>
+      </button>
+      <button class="status-btn yellow" data-section="wellbeing" data-value="yellow">
+        <div class="dot"></div>
+        <div class="label">Could Use a Chat</div>
+        <div class="sublabel">Check in soon</div>
+      </button>
+      <button class="status-btn red" data-section="wellbeing" data-value="red">
+        <div class="dot"></div>
+        <div class="label">Need Support</div>
+        <div class="sublabel">Contact me</div>
+      </button>
+    </div>
+  </div>
+
+  <!-- Optional note -->
+  <div class="note-area">
+    <textarea id="noteInput" rows="2" placeholder="Optional note… (anything you want me to know)"></textarea>
+  </div>
+
+  <div class="divider"></div>
+
+  <button class="submit-btn" id="submitBtn" onclick="submitStatus()">Send Check-In</button>
+
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const state = { workload: null, wellbeing: null };
+
+  // Load saved name
+  const savedName = localStorage.getItem('checkin_name');
+  if (savedName) document.getElementById('nameInput').value = savedName;
+  document.getElementById('nameInput').addEventListener('blur', () => {
+    localStorage.setItem('checkin_name', document.getElementById('nameInput').value.trim());
+  });
+
+  // RECIPIENT EMAIL — update this if management changes
+  const RECIPIENT_EMAIL = 'anicholson@niskanencenter.org';
+
+
+  document.querySelectorAll('.status-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const section = btn.dataset.section;
+      const value = btn.dataset.value;
+      document.querySelectorAll(`.status-btn[data-section="${section}"]`).forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      state[section] = value;
+    });
+  });
+
+  function getLabel(section, value) {
+    const labels = {
+      workload: { green: 'All Good (Manageable)', yellow: 'Getting Busy (Check in soon)', red: 'Overloaded (Contact me)' },
+      wellbeing: { green: 'Doing Well', yellow: 'Could Use a Chat', red: 'Need Support (Contact me)' }
+    };
+    return labels[section][value] || value;
+  }
+
+  function colorEmoji(v) {
+    return { green: '🟢', yellow: '🟡', red: '🔴' }[v] || '';
+  }
+
+  async function submitStatus() {
+    const name = document.getElementById('nameInput').value.trim();
+    const note = document.getElementById('noteInput').value.trim();
+    const recipient = RECIPIENT_EMAIL;
+
+    if (!name) { showToast('Please enter your name', true); return; }
+    if (!state.workload) { showToast('Please select a Workload status', true); return; }
+    if (!state.wellbeing) { showToast('Please select a Wellbeing status', true); return; }
+    if (!recipient) { showToast('No recipient configured', true); return; }
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+
+    const now = new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
+
+    const subject = `Team Check-In: ${name} — ${now}`;
+    const body = `Team Check-In from ${name}
+Submitted: ${now}
+
+📊 Workload: ${colorEmoji(state.workload)} ${getLabel('workload', state.workload)}
+🌿 Wellbeing: ${colorEmoji(state.wellbeing)} ${getLabel('wellbeing', state.wellbeing)}
+${note ? `\n💬 Note: ${note}` : ''}
+
+---
+Sent via Team Check-In app`;
+
+    // Use mailto to open email client — for production, replace with a backend/EmailJS call
+    const mailtoLink = `mailto:${encodeURIComponent(recipient)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = mailtoLink;
+
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.textContent = 'Send Check-In';
+      showToast('Check-in sent! ✓');
+      // Reset selections
+      document.querySelectorAll('.status-btn').forEach(b => b.classList.remove('selected'));
+      state.workload = null;
+      state.wellbeing = null;
+      document.getElementById('noteInput').value = '';
+    }, 1200);
+  }
+
+  function showToast(msg, isError = false) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast' + (isError ? ' error' : '');
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+</script>
+</body>
+</html>
